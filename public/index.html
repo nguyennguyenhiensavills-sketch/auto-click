@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Click</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 32px 16px; }
+    h1 { font-size: 1.4rem; letter-spacing: 0.05em; margin-bottom: 24px; color: #a0cfff; }
+    .card { background: #16213e; border: 1px solid #0f3460; border-radius: 10px; padding: 20px 24px; width: 100%; max-width: 420px; margin-bottom: 20px; }
+    .card h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: #7090b0; margin-bottom: 16px; }
+    .row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .row label { font-size: 0.85rem; color: #a0b0c0; min-width: 90px; }
+    input[type="number"] { background: #0f3460; border: 1px solid #1a4a7a; color: #e0e0e0; border-radius: 6px; padding: 6px 10px; width: 90px; font-size: 0.9rem; }
+    input[type="number"]:disabled { opacity: 0.35; cursor: not-allowed; }
+    input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4d9fff; cursor: pointer; }
+    .btn { border: none; border-radius: 6px; padding: 9px 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-start      { background: #2e7d32; color: #fff; }
+    .btn-stop       { background: #c62828; color: #fff; }
+    .btn-click-pos  { background: #6a1b9a; color: #fff; }
+    .btn-return-pos { background: #e65100; color: #fff; }
+    .pos-label { font-size: 0.8rem; color: #80a8c8; }
+    #status { background: #0d1b2a; border-top: 1px solid #0f3460; width: 100%; max-width: 420px; padding: 10px 16px; border-radius: 6px; font-size: 0.82rem; color: #80a8c8; min-height: 36px; }
+  </style>
+</head>
+<body>
+  <h1>Auto Click</h1>
+
+  <div class="card">
+    <h2>Positions</h2>
+    <div class="row">
+      <button class="btn btn-click-pos" onclick="setClickPos()">ClickButton</button>
+      <span id="clickPosLabel" class="pos-label">not set</span>
+    </div>
+    <div class="row">
+      <button class="btn btn-return-pos" onclick="setReturnPos()">ReturnButton</button>
+      <span id="returnPosLabel" class="pos-label">not set</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Auto-Clicker</h2>
+    <div class="row">
+      <label>Interval (ms)</label>
+      <input type="number" id="intervalMs" value="30000" min="500">
+    </div>
+    <div class="row">
+      <label>Return delay (ms)</label>
+      <input type="number" id="returnDelayMs" value="500" min="0">
+    </div>
+    <div class="row" style="margin-top:4px;">
+      <button class="btn btn-start" onclick="startClick()">Start</button>
+      <button class="btn btn-stop"  onclick="stopClick()">Stop</button>
+    </div>
+  </div>
+
+<div id="status">Idle</div>
+
+  <script>
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    async function post(url, body) {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return res.json();
+    }
+
+    async function setClickPos() {
+      const data = await post('/position/click', {});
+      document.getElementById('clickPosLabel').textContent = `(${data.x}, ${data.y})`;
+      setStatus(data.message);
+    }
+
+    async function setReturnPos() {
+      const data = await post('/position/return', {});
+      document.getElementById('returnPosLabel').textContent = `(${data.x}, ${data.y})`;
+      setStatus(data.message);
+    }
+
+    async function startClick() {
+      const intervalMs    = Number(document.getElementById('intervalMs').value);
+      const returnDelayMs = Number(document.getElementById('returnDelayMs').value);
+      const data = await post('/clicker/start', { intervalMs, returnDelayMs });
+      setStatus(data.message);
+    }
+
+    async function stopClick() {
+      const data = await post('/clicker/stop', {});
+      setStatus(data.message);
+    }
+  </script>
+</body>
+</html>
